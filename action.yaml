@@ -1,0 +1,26 @@
+name: "Pixi-Pack Action"
+description: "Uses pixi-pack to create installers for a pixi env"
+author: "Wytamma"
+branding:
+  icon: 'book'
+  color: 'green'
+
+inputs:
+  entrypoint:
+    description: "Entrypoint for the install script"
+    required: true
+  name:
+    description: "Name for the executable if different from entrypoint"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create install script
+      run: |
+        mv ${{ github.action_path }}/install.template.sh install.sh
+        sed -i "s|{{GH_USER}}|${{github.repository_owner}}|g" install.sh
+        sed -i "s|{{PROJECT}}|${{ github.event.repository.name }}|g" install.sh
+        sed -i "s|{{ENTRYPOINT}}|${{ inputs.entrypoint }}|g" install.sh
+        sed -i "s|{{NAME}}|${{ inputs.name }}|g" install.sh
+      shell: bash
