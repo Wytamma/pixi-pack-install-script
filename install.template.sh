@@ -16,6 +16,9 @@ ENVS_DIR="$HOME/.local/envs"
 VERSION=""
 NAME=""
 
+# Flag to remove
+REMOVE="false"
+
 usage() {
   echo "Usage: $0 [options]"
   echo "  [--gh-user GH_USER]         GitHub user (default: $GH_USER)"
@@ -25,6 +28,7 @@ usage() {
   echo "  [--version VERSION]         Version to install (default: latest from GitHub)"
   echo "  [--bin-dir BIN_DIR]         Directory to place symlink (default: $BIN_DIR)"
   echo "  [--envs-dir ENVS_DIR]       Directory where environments are stored (default: $ENVS_DIR)"
+  echo "  [--remove]                  Remove the environment directory and symlink (if it points to ENV_DIR)"
   echo "  [--help]                    Show this usage message"
   exit 1
 }
@@ -62,6 +66,10 @@ while [ $# -gt 0 ]; do
       ENVS_DIR="$2"
       shift 2
       ;;
+    --remove)
+      REMOVE="true"
+      shift 1
+      ;;
     -h|--help)
       usage
       ;;
@@ -76,6 +84,7 @@ done
 # 3. Rest of the script
 # -----------------------
 
+# Decide on the name for the symlink/executable
 if [ -z "$NAME" ]; then
   NAME="$ENTRYPOINT"
 fi
@@ -83,9 +92,39 @@ fi
 BIN="$BIN_DIR/$NAME"
 ENV_DIR="$ENVS_DIR/$PROJECT"
 
-# check if the bin exists and error if it does
+# -----------------------
+# 4. Handle --remove
+# -----------------------
+if [ "$REMOVE" = "true" ]; then
+  # Remove environment directory if it exists
+  if [ -d "$ENV_DIR" ]; then
+    rm -rf "$ENV_DIR"
+    echo "Removed environment directory: $ENV_DIR"
+  fi
+
+  # Only remove the bin symlink if it points to $ENV_DIR/$NAME
+  if [ -L "$BIN" ]; then
+    # readlink <symlink> returns its target
+    TARGET="$(readlink "$BIN")"
+    EXPECTED_TARGET="$ENV_DIR/$NAME"
+    if [ "$TARGET" = "$EXPECTED_TARGET" ]; then
+      rm "$BIN"
+      echo "Removed symlink: $BIN"
+    else
+      echo "Symlink $BIN points to $TARGET, not $EXPECTED_TARGET. Leaving it unchanged."
+    fi
+  fi
+
+  echo "Removal complete!"
+  exit 0
+fi
+
+# ----------------------------------------
+# 5. Check if BIN already exists (install)
+# ----------------------------------------
 if [ -L "$BIN" ] || [ -e "$BIN" ]; then
-  echo "Error: $BIN already exists. Please remove it before running this script."
+  echo "Error: $BIN already exists. Please use the --name option to specify a different name or remove the existing file."
+  echo "If you want to remove the existing file, use the --remove option."
   exit 1
 fi
 
