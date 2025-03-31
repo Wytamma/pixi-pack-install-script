@@ -16,7 +16,6 @@ ENVS_DIR="$HOME/.local/envs"
 VERSION=""
 NAME=""
 
-# Flag to remove
 REMOVE="false"
 
 usage() {
@@ -124,7 +123,6 @@ fi
 # ----------------------------------------
 if [ -L "$BIN" ] || [ -e "$BIN" ]; then
   echo "Error: $BIN already exists. Please use the --name option to specify a different name or remove the existing file."
-  echo "If you want to remove the existing file, use the --remove option."
   exit 1
 fi
 
