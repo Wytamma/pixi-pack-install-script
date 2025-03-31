@@ -25,7 +25,7 @@ permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  create-install-script-and-release:
     runs-on: ubuntu-latest
 
     steps:
