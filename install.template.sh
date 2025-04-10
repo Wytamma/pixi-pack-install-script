@@ -178,6 +178,9 @@ get_architecture() {
     arm64)
       echo "arm64"
       ;;
+    aarch64)
+      echo "aarch64"
+      ;; 
     *)
       echo "Unsupported architecture"
       exit 1
@@ -201,21 +204,23 @@ download_installer() {
 URL="https://github.com/${GH_USER}/${PROJECT}/releases/download/${VERSION}/${PROJECT}-${VERSION}-${OS}-${ARCH}.sh"
 FILE="${ENV_DIR}/${PROJECT}-${VERSION}-${OS}-${ARCH}.sh"
 
-if [ -f "$FILE" ]; then
-  echo "Installer already downloaded: $FILE"
-else
-  echo "Installer not found, downloading..."
-  download_installer "$FILE" "$URL"
-fi
+echo "Downloading installer from $URL"
+download_installer "$FILE" "$URL"
 
-if [ ! -f "$FILE" ]; then
-  echo "Failed to download the installer."
+# check if the file exists and is not empty
+if [ ! -s "$FILE" ]; then
+  echo "Failed to download the installer from $URL"
   exit 1
 fi
 
 echo "Running installer"
 chmod +x "$FILE"
 "$FILE" --output-directory "$ENV_DIR"
+
+if [ ! -f "${ENV_DIR}/activate.sh" ]; then
+  echo "Failed to create the environment."
+  exit 1
+fi
 
 # add the entrypoint to activate.sh
 cat "${ENV_DIR}/activate.sh" > "${ENV_DIR}/${NAME}"
@@ -230,6 +235,14 @@ if ! echo "$PATH" | grep -q "$BIN_DIR"; then
   echo "Warning: $BIN_DIR is not in your PATH. Please add it to your PATH."
   echo "You can do this by adding the following line to your ~/.bashrc or ~/.zshrc:"
   echo "export PATH=\$PATH:$BIN_DIR"
+fi
+
+# remove the installer
+if [ -f "$FILE" ]; then
+  rm "$FILE"
+  echo "Removed installer: $FILE"
+else
+  echo "Installer not found, skipping removal."
 fi
 
 echo "Installation complete!"
