@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Create install script
-        uses: wytamma/pixi-pack-install-script@v1
+        uses: wytamma/pixi-pack-install-script@v2
         with:
           entrypoint: "python"
 
